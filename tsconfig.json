@@ -26,14 +26,16 @@
         "./src/*"
       ]
     },
+    "moduleResolution": "NodeNext"
     // "moduleResolution": "node"
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
-, "src/lib/genThumbnail.js"  ],
+    ".next/types/**/*.ts",
+    "src/lib/genThumbnail.js"
+  ],
   "exclude": [
     "node_modules"
   ]
