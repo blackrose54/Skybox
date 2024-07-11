@@ -26,7 +26,7 @@
         "./src/*"
       ]
     },
-    "moduleResolution": "node"
+    // "moduleResolution": "node"
   },
   "include": [
     "next-env.d.ts",
