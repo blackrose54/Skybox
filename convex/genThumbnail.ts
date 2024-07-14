@@ -6,11 +6,11 @@ import { internalAction } from "./_generated/server"
 
 export const GenThumbnail = internalAction({
     args:{
-        filepath:v.string()
+        filepath:v.string(),
+        storageId:v.id("_storage")
     },
     async handler(ctx, args) {
-        console.log(args,'hi')
-      const res = await genThumbnail(args.filepath) 
+      const res = await genThumbnail(args.filepath,args.storageId) 
       console.log(res)
       return res
     },

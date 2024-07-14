@@ -21,8 +21,18 @@ export const filesValidator = v.object({
   name: v.string(),
   orgId: v.string(),
   storageId: v.id("_storage"),
+  authorTokenIdentifier:v.string(),
   type: filetype,
+  previewImageUrl:v.optional(v.string()),
+  previewId: v.optional(v.string()),
+  isFavourite:v.boolean()
 });
+
+export const favourites = v.object({
+  fileId:v.id("files"),
+  tokenIdentifier:v.string(),
+  
+})
 
 export const usersValidator = v.object({
   clerkId: v.string(),
@@ -43,4 +53,5 @@ export default defineSchema({
   orgs: defineTable(orgValidator)
     .index("by_orgId", ["orgId"])
     .index("by_clerkId", ["clerkId"]),
+  favourites: defineTable(favourites).index("by_fileId", ["fileId"]).index("by_tokenIdentifier", ["tokenIdentifier"]),
 });

@@ -23,6 +23,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { api } from "../../convex/_generated/api";
 import { Button } from "./ui/button";
 import { filetype } from "../../convex/schema";
+import { useRouter } from "next/navigation";
 
 interface UploadButtonProps {}
 
@@ -47,6 +48,7 @@ const UploadButton: FC<UploadButtonProps> = ({}): ReactElement => {
   const sendFile = useAction(api.files.sendFile);
 
   const fileref = form.register("file");
+
 
   const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = async (
     values: z.infer<typeof formSchema>
@@ -100,8 +102,7 @@ const UploadButton: FC<UploadButtonProps> = ({}): ReactElement => {
           break;
 
         case "application/json":
-          type = "json";
-          break;
+  break;
 
         case "video/AV1":
         case "video/MPV":
@@ -148,7 +149,7 @@ const UploadButton: FC<UploadButtonProps> = ({}): ReactElement => {
       
           <Button className=" flex gap-x-2">
             <Upload size={18} />
-            <p>Upload File</p>
+            <p className=" max-md:hidden">Upload File</p>
           </Button>
         </DialogTrigger>
         <DialogContent>

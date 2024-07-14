@@ -1,15 +1,16 @@
-"use client";
-
-import { useOrganization } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
-import { FC, ReactElement, Suspense, useEffect, useRef, useState } from "react";
-import { api } from "../../convex/_generated/api";
-import FileCard from "./FileCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Doc } from "../../convex/_generated/dataModel";
 import Image from "next/image";
+import { ReactElement } from "react";
+import { Doc } from "../../convex/_generated/dataModel";
+import FileCard from "./FileCard";
+import { useSearchParams } from "next/navigation";
 
-interface FileListProps {}
+interface props {
+  files?: (Doc<"files">|null)[] | null;
+  orgId: string | null | undefined;
+  query?:string|null;
+  fav?:boolean
+}
 
 const FileListLoading = () => {
   return (
@@ -22,21 +23,46 @@ const FileListLoading = () => {
       <Skeleton className=" h-48 w-full rounded-md" />
       <Skeleton className=" h-48 w-full rounded-md" />
       <Skeleton className=" h-48 w-full rounded-md" />
+      <Skeleton className=" h-48 w-full rounded-md" />
     </>
   );
 };
 
-const FileList: FC<FileListProps> = ({}): ReactElement => {
-  const orgId = useOrganization().organization?.id;
-  const files = useQuery(api.files.getFile, {
-    orgId: orgId || "",
-  });
-
+const FileList = ({ files, orgId ,query,fav}: props): ReactElement => {
   return (
     <div className=" grid grid-flow-row grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ">
       {files ? (
         files.length > 0 ? (
-          files.map((file) => <FileCard key={file._id} file={file} organization={orgId||""} />)
+          files.map((file) => {
+            if(file) return(
+            <FileCard key={file._id} file={file} organization={orgId || ""} />
+          )})
+        ) :query ?(
+          <div className=" container col-span-full space-y-4 mt-8">
+          <Image
+            src={"/emptyResult.svg"}
+            alt="logo"
+            width={400}
+            height={400}
+            className=" mx-auto"
+          />
+          <p className=" text-center">
+            No files were found for the given query!
+          </p>
+        </div>
+        ):fav ?(
+          <div className=" container col-span-full space-y-4 mt-8">
+            <Image
+              src={"/favourite.svg"}
+              alt="logo"
+              width={300}
+              height={300}
+              className=" mx-auto"
+            />
+            <p className=" text-center">
+              You Don&apos;t have any files marked as Favourite.
+            </p>
+          </div>
         ) : (
           <div className=" container col-span-full space-y-4 mt-8">
             <Image
@@ -46,7 +72,9 @@ const FileList: FC<FileListProps> = ({}): ReactElement => {
               height={400}
               className=" mx-auto"
             />
-            <p className=" text-center">You Don&apos;t have any files. Upload One</p>
+            <p className=" text-center">
+              You Don&apos;t have any files. Upload One
+            </p>
           </div>
         )
       ) : (

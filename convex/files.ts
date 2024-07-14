@@ -14,20 +14,127 @@ import { api, internal } from "./_generated/api";
 export const getFile = query({
   args: {
     orgId: v.string(),
+    query: v.optional(v.string()),
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
 
-    if (!identity) return;
+    if (!identity) return [];
 
     if (args.orgId == "") {
       args.orgId = identity.tokenIdentifier;
     }
 
-    return ctx.db
+    const res = await ctx.db
       .query("files")
-      .filter((q) => q.eq(q.field("orgId"), args.orgId))
+      .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
       .collect();
+
+    const q = args.query;
+
+    if (q) {
+      return res.filter((file) => file.name.includes(q));
+    }
+    return res;
+  },
+});
+
+export const markFavourite = mutation({
+  args: {
+    clerkId: v.string(),
+    fileId: v.id("files"),
+  },
+  async handler(ctx, args) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return;
+
+    const file = await ctx.db
+      .query("files")
+      .filter((v) => v.eq(v.field("_id"), args.fileId))
+      .first();
+
+    if (!file) return null;
+
+    const user = await ctx.db
+      .query("users")
+      .filter((v) => v.eq(v.field("clerkId"), args.clerkId))
+      .first();
+
+    if (!user || user.tokenIdentifier !== identity.tokenIdentifier) return null;
+
+    await ctx.db.insert("favourites", {
+      tokenIdentifier: identity.tokenIdentifier,
+      fileId: args.fileId,
+    });
+
+    await ctx.db.patch(file._id,{isFavourite:true})
+
+    return true;
+  },
+});
+
+export const unfavourite = mutation({
+  args: { clerkId: v.string(), fileId: v.id("files") },
+  async handler(ctx, args) {
+    try {
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) return;
+
+      const user = await ctx.db
+        .query("users")
+        .filter((v) => v.eq(v.field("clerkId"), args.clerkId))
+        .first();
+
+      if (!user || user.tokenIdentifier !== identity.tokenIdentifier) return;
+
+      const favourite = await ctx.db.query('favourites').withIndex('by_fileId',q=>q.eq('fileId',args.fileId)).first();
+
+      if(!favourite) return;
+
+      await ctx.db.patch(args.fileId,{isFavourite:false})
+      await ctx.db.delete(favourite._id);
+
+      return true;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  },
+});
+
+export const getFavourites = query({
+  args: {
+    clerkId: v.string(),
+  },
+  async handler(ctx, args) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+
+    const user = await ctx.db
+      .query("users")
+      .filter((user) => user.eq(user.field("clerkId"), args.clerkId))
+      .first();
+
+    if (!user || user.tokenIdentifier !== identity.tokenIdentifier) return [];
+
+    const files = await ctx.db
+      .query("favourites")
+      .withIndex("by_tokenIdentifier", (q) =>
+        q.eq("tokenIdentifier", user.tokenIdentifier)
+      )
+      .collect();
+
+    const promises = files.map(
+      async (file) =>
+        await ctx.db
+          .query("files")
+          .withIndex("by_id", (q) => q.eq("_id", file.fileId))
+          .first()
+    );
+
+    const res = await Promise.all(promises);
+
+    return res;
   },
 });
 
@@ -79,17 +186,19 @@ export const sendFile = action({
       name: args.name,
       type: args.type,
     });
- 
+
     const filepath = await ctx.storage.getUrl(args.storageId);
-    console.log(filepath)
+    console.log(filepath);
     if (filepath) {
       const thumb = await ctx.runAction(internal.genThumbnail.GenThumbnail, {
         filepath,
+        storageId: args.storageId,
       });
       console.log(thumb);
     }
   },
 });
+
 export const uploadFile = mutation({
   args: {
     storageId: v.id("_storage"),
@@ -104,9 +213,31 @@ export const uploadFile = mutation({
     await ctx.db.insert("files", {
       storageId: args.storageId,
       orgId: args.orgId || identity.tokenIdentifier,
-      name: args.name,
+      name: args.name, 
       type: args.type,
-    });
+      authorTokenIdentifier: identity.tokenIdentifier,
+      isFavourite:false
+    }); 
+  },
+});
+
+export const setPreviewImage = mutation({
+  args: {
+    url: v.string(),
+    id: v.string(),
+    storageId: v.id("_storage"),
+  },
+  async handler(ctx, args) {
+    const file = await ctx.db
+      .query("files")
+      .filter((file) => file.eq(file.field("storageId"), args.storageId))
+      .first();
+    if (file) {
+      await ctx.db.patch(file._id, {
+        previewId: args.id,
+        previewImageUrl: args.url,
+      });
+    }
   },
 });
 
