@@ -67,7 +67,7 @@ export const markFavourite = mutation({
       fileId: args.fileId,
     });
 
-    await ctx.db.patch(file._id,{isFavourite:true})
+    await ctx.db.patch(file._id, { isFavourite: true });
 
     return true;
   },
@@ -87,11 +87,14 @@ export const unfavourite = mutation({
 
       if (!user || user.tokenIdentifier !== identity.tokenIdentifier) return;
 
-      const favourite = await ctx.db.query('favourites').withIndex('by_fileId',q=>q.eq('fileId',args.fileId)).first();
+      const favourite = await ctx.db
+        .query("favourites")
+        .withIndex("by_fileId", (q) => q.eq("fileId", args.fileId))
+        .first();
 
-      if(!favourite) return;
+      if (!favourite) return;
 
-      await ctx.db.patch(args.fileId,{isFavourite:false})
+      await ctx.db.patch(args.fileId, { isFavourite: false });
       await ctx.db.delete(favourite._id);
 
       return true;
@@ -134,7 +137,7 @@ export const getFavourites = query({
 
     const res = await Promise.all(promises);
 
-    return res;
+    return res.filter(res=> res !== null);
   },
 });
 
@@ -213,11 +216,11 @@ export const uploadFile = mutation({
     await ctx.db.insert("files", {
       storageId: args.storageId,
       orgId: args.orgId || identity.tokenIdentifier,
-      name: args.name, 
+      name: args.name,
       type: args.type,
       authorTokenIdentifier: identity.tokenIdentifier,
-      isFavourite:false
-    }); 
+      isFavourite: false,
+    });
   },
 });
 
@@ -244,12 +247,48 @@ export const setPreviewImage = mutation({
 export const DeleteFiles = mutation({
   async handler(ctx, args: { files: Doc<"files">[] }) {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthenticated");
+    if (!identity) return false;
 
-    args.files.forEach(async (file) => {
-      await ctx.storage.delete(file.storageId);
-      await ctx.db.delete(file._id);
-    });
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("tokenIdentifier"), identity.tokenIdentifier))
+      .first();
+
+    if (!user) return false;
+
+    const res = await Promise.all(
+      args.files.map(async (file) => {
+        const orgId = (
+          await ctx.db
+            .query("files")
+            .withIndex("by_id", (q) => q.eq("_id", file._id))
+            .first()
+        )?.orgId;
+
+        const isAdmin = await ctx.db
+          .query("orgs")
+          .filter((q) =>
+            q.and(
+              q.eq(q.field("orgId"), orgId),
+              q.eq(q.field("clerkId"), user.clerkId)
+            )
+          )
+          .first();
+
+        if (
+          isAdmin?.role == "admin" ||
+          file.authorTokenIdentifier === identity.tokenIdentifier
+        ) {
+          await ctx.storage.delete(file.storageId);
+          await ctx.db.delete(file._id);
+          return true;
+        } else {
+          return false;
+        }
+      })
+    );
+
+    return res.every((val) => val);
   },
 });
 

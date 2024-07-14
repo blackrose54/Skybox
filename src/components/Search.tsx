@@ -20,7 +20,7 @@ const formSchema = z.object({
   search: z.string().max(50),
 });
 
-function Search({ query }: { query: string }) {
+function Search({ query ,route}: { query: string,route:string }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -36,7 +36,7 @@ function Search({ query }: { query: string }) {
     };
 
     router.replace(
-      "/?" +
+      `${route}?` +
         qs.stringify(params)
     );
   };
@@ -44,7 +44,7 @@ function Search({ query }: { query: string }) {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className=" space-y-8 w-full"
+        className=" space-y-8 md:w-[50%]"
       >
         <FormField
           control={form.control}

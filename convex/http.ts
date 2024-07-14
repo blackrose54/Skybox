@@ -60,14 +60,24 @@ http.route({
           await ctx.runMutation(internal.users.addOrgIdtoUser, {
             clerkId: result.data.public_user_data.user_id,
             orgId: result.data.organization.id,
+            role:result.data.role === 'org:admin'?'admin':'member'
           });
           break;
+        
 
         case "organizationMembership.deleted":
           await ctx.runMutation(internal.users.removeUserfromOrg, {
             clerkId: result.data.public_user_data.user_id,
             orgId: result.data.organization.id,
           }); 
+        
+        case "organizationMembership.updated":
+          await ctx.runMutation(internal.users.updateRole,{
+            orgId:result.data.organization.id,
+            clerkId:result.data.public_user_data.user_id,
+            role:result.data.role === 'org:admin'?'admin':'member'
+          })
+
       }
 
       return new Response(null, {

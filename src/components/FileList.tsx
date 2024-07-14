@@ -1,15 +1,18 @@
+
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { ReactElement } from "react";
 import { Doc } from "../../convex/_generated/dataModel";
 import FileCard from "./FileCard";
 import { useSearchParams } from "next/navigation";
+import { auth, currentUser, getAuth } from "@clerk/nextjs/server";
 
 interface props {
   files?: (Doc<"files">|null)[] | null;
   orgId: string | null | undefined;
   query?:string|null;
-  fav?:boolean
+  fav?:boolean;
+  role?:string|null
 }
 
 const FileListLoading = () => {
@@ -28,14 +31,16 @@ const FileListLoading = () => {
   );
 };
 
-const FileList = ({ files, orgId ,query,fav}: props): ReactElement => {
+const FileList = ({ files, orgId ,query,fav,role}: props) => {
+ 
   return (
     <div className=" grid grid-flow-row grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ">
       {files ? (
         files.length > 0 ? (
           files.map((file) => {
+
             if(file) return(
-            <FileCard key={file._id} file={file} organization={orgId || ""} />
+            <FileCard key={file._id} file={file} organization={orgId || ""} role={role} />
           )})
         ) :query ?(
           <div className=" container col-span-full space-y-4 mt-8">

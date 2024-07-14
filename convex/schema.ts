@@ -15,6 +15,11 @@ export const filetype = v.union(
 
 );
 
+export const roles = v.union(
+  v.literal("member"),
+  v.literal("admin")
+)
+
 export type filetype = typeof filetype.type
 
 export const filesValidator = v.object({
@@ -45,6 +50,7 @@ export const usersValidator = v.object({
 export const orgValidator = v.object({
   orgId: v.string(),
   clerkId: v.string(),
+  role:roles
 });
 
 export default defineSchema({

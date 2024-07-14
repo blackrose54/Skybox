@@ -28,7 +28,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { fileIconsList } from "@/lib/constants/filetype";
+import { Protect, useSession } from "@clerk/nextjs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
 import { useAction, useMutation } from "convex/react";
 import { Download, MoreVerticalIcon, StarIcon, Trash2Icon } from "lucide-react";
 import Image from "next/image";
@@ -36,17 +38,14 @@ import { toast } from "react-toastify";
 import { api } from "../../convex/_generated/api";
 import { Doc } from "../../convex/_generated/dataModel";
 import { Button } from "./ui/button";
-import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
-import { useSession } from "@clerk/nextjs";
-import { markFavourite } from "../../convex/files";
 
 interface FileCardProps {
   file: Doc<"files">;
   organization: string;
-  // isFav:boolean ;
+  role?:string|null
 }
 
-const FileActions = ({ file }: { file: Doc<"files"> }) => {
+const FileActions = ({ file,organization,role }: FileCardProps) => {
   const [isOpen, setisOpen] = useState<boolean>(false);
   const deletefile = useMutation(api.files.DeleteFiles);
   const session = useSession();
@@ -68,8 +67,9 @@ const FileActions = ({ file }: { file: Doc<"files"> }) => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
-                await deletefile({ files: [file] });
-                toast.success("File deleted successfully");
+                const res =await deletefile({ files: [file] });
+                if(res) toast.success("File deleted successfully");
+                else toast.error("Permission denied");
               }}
             >
               Continue
@@ -108,22 +108,25 @@ const FileActions = ({ file }: { file: Doc<"files"> }) => {
               <p>{file.isFavourite ? "UnFavourite" : "Favourite"}</p>
             </div>
           </DropdownMenuItem>
+          <Protect condition={()=>(role === 'org:admin') || (role === null)}  fallback={<></>}>
+
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => setisOpen(true)}
             className="  cursor-pointer"
-          >
+            >
             <div className="text-red-500 flex items-center gap-x-2">
               <Trash2Icon />
               <p>Delete</p>
             </div>
           </DropdownMenuItem>
+            </Protect>
         </DropdownMenuContent>
       </DropdownMenu>
     </>
   );
 };
-const FileCard: FC<FileCardProps> = ({ file, organization }): ReactElement => {
+const FileCard: FC<FileCardProps> = ({ file, organization,role }): ReactElement => {
   const getLink = useAction(api.files.getDownloadUrl);
   return (
     <Card className="hover:shadow-lg ">
@@ -133,7 +136,7 @@ const FileCard: FC<FileCardProps> = ({ file, organization }): ReactElement => {
             <FontAwesomeIcon icon={fileIconsList.get(file.type)!} size={"sm"} />
             <p>{file.name}</p>
           </div>
-          <FileActions file={file} />
+          <FileActions file={file} organization={organization} role={role}/>
         </CardTitle>
       </CardHeader>
 
@@ -142,8 +145,7 @@ const FileCard: FC<FileCardProps> = ({ file, organization }): ReactElement => {
           src={file.previewImageUrl || "/filePreview.svg"}
           alt="preview"
           fill
-          className=" object-none"
-          sizes=""
+          className="object-left-top object-cover"
         />
       </CardContent>
       <CardFooter>
