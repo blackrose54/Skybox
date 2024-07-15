@@ -1,6 +1,7 @@
 import { v } from "convex/values";
-import { internalMutation, internalQuery } from "./_generated/server";
+import { internalMutation, internalQuery, query } from "./_generated/server";
 import { roles } from "./schema";
+import { Doc } from "./_generated/dataModel";
 
 export const createUser = internalMutation({
   args: {
@@ -29,6 +30,28 @@ export const addOrgIdtoUser = internalMutation({
     });
   },
 });
+
+export const updateuser = internalMutation({
+  async handler(ctx, args:Doc<"users">) {
+    await ctx.db.patch(args._id,args)
+    
+  },
+})
+
+export const getUserImage = query({
+  args:{
+    tokenIdentifier:v.string()
+  },
+  async handler(ctx, args) {
+    const identity = await ctx.auth.getUserIdentity();
+    if(!identity) return;
+
+    return( await ctx.db
+     .query("users").withIndex('by_tokenidentifier',(q)=>q.eq('tokenIdentifier',args.tokenIdentifier))
+     .first())
+     
+  }
+})
 
 export const getUserbyClerkId = internalQuery({
   args: {

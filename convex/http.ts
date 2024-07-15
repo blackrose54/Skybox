@@ -37,8 +37,25 @@ http.route({
           });
           break;
 
+        case "user.updated":
+          const user = await ctx.runQuery(internal.users.getUserbyClerkId, {
+            id: result.data.id,
+          });
+          if (user)
+            await ctx.runMutation(internal.users.updateuser, {
+              clerkId: result.data.id,
+              image: result.data.image_url,
+              name: `${result.data.first_name} ${result.data.last_name}`,
+              orgIds: result.data.organization_memberships
+                ? result.data.organization_memberships.map((org) => org.id)
+                : [],
+              tokenIdentifier: user.tokenIdentifier,
+              _creationTime:user._creationTime,
+              _id:user._id,
+            });
+          
         case "organization.deleted":
-          if (result.data.deleted) {
+          if (result.data.id) {
             const files = await ctx.runQuery(internal.files.getOrgFiles, {
               orgId: result.data.id || "",
             });
@@ -60,24 +77,22 @@ http.route({
           await ctx.runMutation(internal.users.addOrgIdtoUser, {
             clerkId: result.data.public_user_data.user_id,
             orgId: result.data.organization.id,
-            role:result.data.role === 'org:admin'?'admin':'member'
+            role: result.data.role === "org:admin" ? "admin" : "member",
           });
           break;
-        
 
         case "organizationMembership.deleted":
           await ctx.runMutation(internal.users.removeUserfromOrg, {
             clerkId: result.data.public_user_data.user_id,
             orgId: result.data.organization.id,
-          }); 
-        
-        case "organizationMembership.updated":
-          await ctx.runMutation(internal.users.updateRole,{
-            orgId:result.data.organization.id,
-            clerkId:result.data.public_user_data.user_id,
-            role:result.data.role === 'org:admin'?'admin':'member'
-          })
+          });
 
+        case "organizationMembership.updated":
+          await ctx.runMutation(internal.users.updateRole, {
+            orgId: result.data.organization.id,
+            clerkId: result.data.public_user_data.user_id,
+            role: result.data.role === "org:admin" ? "admin" : "member",
+          });
       }
 
       return new Response(null, {

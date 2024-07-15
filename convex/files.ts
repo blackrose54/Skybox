@@ -1,25 +1,70 @@
 import { v } from "convex/values";
-import { Doc } from "./_generated/dataModel";
+import { api, internal } from "./_generated/api";
+import { Doc, Id } from "./_generated/dataModel";
 import {
   action,
-  internalAction,
+  ActionCtx,
   internalMutation,
   internalQuery,
   mutation,
+  MutationCtx,
   query,
+  QueryCtx,
 } from "./_generated/server";
 import { filetype } from "./schema";
-import { api, internal } from "./_generated/api";
+
+export const hasAccess = async (
+  ctx: QueryCtx,
+  orgId: string,
+  fileId: Id<"files">
+) => {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) return false;
+
+  const user = await ctx.db
+    .query("users")
+    .filter((user) =>
+      user.eq(user.field("tokenIdentifier"), identity.tokenIdentifier)
+    )
+    .first();
+
+  if (!user) return false;
+
+  const file = await ctx.db
+    .query("files")
+    .withIndex("by_id", (v) => v.eq("_id", fileId))
+    .first();
+  if (!file) return false;
+
+  if (file.authorTokenIdentifier === identity.tokenIdentifier) return true;
+
+  const org = await ctx.db
+    .query("orgs")
+    .withIndex("by_orgId", (v) => v.eq("orgId", orgId))
+    .filter((q) => q.eq(q.field("clerkId"), user.clerkId))
+    .first();
+
+  if (org?.role !== "admin") return false;
+  return true;
+};
 
 export const getFile = query({
   args: {
     orgId: v.string(),
     query: v.optional(v.string()),
+    onlyAuthor:v.optional(v.boolean())
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) return [];
+
+    if(args.onlyAuthor){      
+
+      return await ctx.db.query('files').filter(f=>f.eq(f.field('authorTokenIdentifier'),identity.tokenIdentifier)).collect()
+
+
+    }
 
     if (args.orgId == "") {
       args.orgId = identity.tokenIdentifier;
@@ -35,6 +80,7 @@ export const getFile = query({
     if (q) {
       return res.filter((file) => file.name.includes(q));
     }
+
     return res;
   },
 });
@@ -137,7 +183,81 @@ export const getFavourites = query({
 
     const res = await Promise.all(promises);
 
-    return res.filter(res=> res !== null);
+    return res.filter((r) => r && !r.deleted);
+  },
+});
+
+export const restorefile = mutation({
+  args: {
+    fileId: v.id("files"),
+    orgId: v.string(),
+  },
+  async handler(ctx, args) {
+    const hasacess = await hasAccess(ctx, args.orgId, args.fileId);
+
+    if (hasacess) {
+      await ctx.db.patch(args.fileId, { deleted: false });
+      return true;
+    }
+  },
+});
+
+export const clearTrash = internalMutation({
+  args: {},
+  async handler(ctx) {
+    const files = await ctx.db
+      .query("files")
+      .filter((f) => f.eq(f.field("deleted"), true))
+      .collect();
+    await Promise.all(
+      files.map(async (file) => {
+        await ctx.storage.delete(file.storageId)
+        await ctx.db.delete(file._id);
+      })
+    );
+  },
+});
+
+
+export const markForDeletion = mutation({
+  args: {
+    fileId: v.id("files"),
+  },
+  async handler(ctx, args) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return;
+
+    const user = await ctx.db
+      .query("users")
+      .filter((u) => u.eq(u.field("tokenIdentifier"), identity.tokenIdentifier))
+      .first();
+
+    if (!user) return;
+
+    const file = await ctx.db
+      .query("files")
+      .withIndex("by_id", (q) => q.eq("_id", args.fileId))
+      .first();
+
+    if (!file) return;
+
+    const isOwner = file.authorTokenIdentifier === identity.tokenIdentifier;
+
+    if (isOwner) {
+      await ctx.db.patch(args.fileId, { deleted: true });
+      return true;
+    }
+
+    const org = await ctx.db
+      .query("orgs")
+      .withIndex("by_orgId", (q) => q.eq("orgId", file.orgId))
+      .filter((u) => u.eq(u.field("clerkId"), user.clerkId))
+      .first();
+
+    if (org?.role === "admin") {
+      await ctx.db.patch(args.fileId, { deleted: true });
+      return true;
+    }
   },
 });
 

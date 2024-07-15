@@ -189,7 +189,7 @@ const UploadButton: FC<UploadButtonProps> = ({}): ReactElement => {
                   </FormItem>
                 )}
               />
-              <Button type="submit">
+              <Button className="w-24" type="submit">
                 {form.formState.isSubmitting ? (
                   <Loader2 className=" animate-spin" />
                 ) : (

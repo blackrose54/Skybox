@@ -15,10 +15,10 @@ const Page: FC<pageProps> = ({}): ReactElement => {
   const files = useQuery(api.files.getFile, {
     orgId: orgId || "",
     query: params.get("search") ?? undefined,
-  });
-  const {orgRole} = useAuth()
+  })
+  const {orgRole,userId} = useAuth()
   return (
-     <FileList files={files} orgId={orgId} query={params.get("search")} role={orgRole}/>
+     <FileList files={files?.filter(file=>!file.deleted)} clerkId={userId} orgId={orgId} query={params.get("search")} role={orgRole}/>
   );
 };
 

@@ -30,7 +30,8 @@ export const filesValidator = v.object({
   type: filetype,
   previewImageUrl:v.optional(v.string()),
   previewId: v.optional(v.string()),
-  isFavourite:v.boolean()
+  isFavourite:v.boolean(),
+  deleted:v.optional(v.boolean()),
 });
 
 export const favourites = v.object({
@@ -55,7 +56,7 @@ export const orgValidator = v.object({
 
 export default defineSchema({
   files: defineTable(filesValidator).index("by_orgId", ["orgId"]),
-  users: defineTable(usersValidator).index("by_clearkId", ["clerkId"]),
+  users: defineTable(usersValidator).index("by_clearkId", ["clerkId"]).index("by_tokenidentifier", ["tokenIdentifier"]),
   orgs: defineTable(orgValidator)
     .index("by_orgId", ["orgId"])
     .index("by_clerkId", ["clerkId"]),

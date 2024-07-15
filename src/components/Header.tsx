@@ -26,6 +26,10 @@ const Header: FC<HeaderProps> = ({}): ReactElement => {
       </div>
       </Link>
 
+      <Link href={'/dashboard/files'}>
+        <Button variant={'outline'}>Your Files</Button>
+      </Link>
+
       <div>
         <SignedIn>
           <OrganizationSwitcher />

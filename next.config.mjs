@@ -12,6 +12,11 @@ const nextConfig = {
         hostname: 's3.amazonaws.com',
         port: '',
         pathname: '/io-filepreviews-sandbox-uploads/**',
+      },{
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
