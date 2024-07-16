@@ -1,6 +1,6 @@
 "use client";
 
-import { FileIcon, Icon, StarIcon, TrashIcon } from "lucide-react";
+import { BookUser, FileIcon, Icon, StarIcon, TrashIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import SidebarOption from './SidebarOption'
 
@@ -16,6 +16,9 @@ const items = [
   },{
     title:"Trash",
     Icon:TrashIcon
+  },{
+    title:"My Files",
+    Icon:BookUser
   }
 ]
 

@@ -30,7 +30,7 @@ http.route({
             }`,
             image: result.data.image_url,
             orgIds: result.data.organization_memberships
-              ? result.data.organization_memberships.map((org) => org.id)
+              ? result.data.organization_memberships.map((org:any) => org.id)
               : [],
             clerkId: result.data.id,
             tokenIdentifier: `${process.env.CLERK_API_URL}|${result.data.id}`,
@@ -47,7 +47,7 @@ http.route({
               image: result.data.image_url,
               name: `${result.data.first_name} ${result.data.last_name}`,
               orgIds: result.data.organization_memberships
-                ? result.data.organization_memberships.map((org) => org.id)
+                ? result.data.organization_memberships.map((org:any) => org.id)
                 : [],
               tokenIdentifier: user.tokenIdentifier,
               _creationTime:user._creationTime,

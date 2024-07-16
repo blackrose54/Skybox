@@ -7,10 +7,10 @@ interface pageProps {
 }
 
 const Page: FC<pageProps> = ({}):ReactElement => {
+   
 
- 
+  return <Filebrowser authorOnly/>
 
-  return <Filebrowser trash /> 
 }
 
-export default Page
+export default Page;

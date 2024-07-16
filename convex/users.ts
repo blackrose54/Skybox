@@ -1,7 +1,13 @@
 import { v } from "convex/values";
-import { internalMutation, internalQuery, query } from "./_generated/server";
+import {
+  action,
+  internalMutation,
+  internalQuery,
+  query,
+} from "./_generated/server";
 import { roles } from "./schema";
 import { Doc } from "./_generated/dataModel";
+import { api, internal } from "./_generated/api";
 
 export const createUser = internalMutation({
   args: {
@@ -32,26 +38,27 @@ export const addOrgIdtoUser = internalMutation({
 });
 
 export const updateuser = internalMutation({
-  async handler(ctx, args:Doc<"users">) {
-    await ctx.db.patch(args._id,args)
-    
+  async handler(ctx, args: Doc<"users">) {
+    await ctx.db.patch(args._id, args);
   },
-})
+});
 
-export const getUserImage = query({
-  args:{
-    tokenIdentifier:v.string()
+export const getUser = query({
+  args: {
+    tokenIdentifier: v.string(),
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
-    if(!identity) return;
+    if (!identity) return;
 
-    return( await ctx.db
-     .query("users").withIndex('by_tokenidentifier',(q)=>q.eq('tokenIdentifier',args.tokenIdentifier))
-     .first())
-     
-  }
-})
+    return await ctx.db
+      .query("users")
+      .withIndex("by_tokenidentifier", (q) =>
+        q.eq("tokenIdentifier", args.tokenIdentifier)
+      )
+      .first();
+  },
+});
 
 export const getUserbyClerkId = internalQuery({
   args: {
@@ -131,9 +138,29 @@ export const updateRole = internalMutation({
       .first();
     if (org) {
       org.role = args.role;
-      await ctx.db.patch(org._id,{
-        'role':args.role
-      })
+      await ctx.db.patch(org._id, {
+        role: args.role,
+      });
     }
+  },
+});
+
+export const getuseraction = action({
+  args: {
+    tokenIdentifier: v.string(),
+  },
+  async handler(ctx, args):Promise<Doc<"users">|null> {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    let user :Doc<"users">|null = null;
+
+    user = await ctx.runQuery(api.users.getUser, {
+      tokenIdentifier: args.tokenIdentifier,
+    });
+
+    if (!user) return null;
+
+    return user;
   },
 });

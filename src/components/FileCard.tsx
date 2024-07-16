@@ -2,16 +2,6 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { FC, ReactElement, useState } from "react";
 
 import {
@@ -21,6 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
+import { formatDistance, subDays } from "date-fns";
 
 import {
   DropdownMenu,
@@ -35,9 +27,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
 import { useAction, useMutation, useQuery } from "convex/react";
 import {
+  ArchiveRestore,
+  ArchiveRestoreIcon,
   Download,
   MoreVerticalIcon,
   StarIcon,
+  Trash,
   Trash2Icon,
   UserIcon,
 } from "lucide-react";
@@ -46,6 +41,9 @@ import { toast } from "react-toastify";
 import { api } from "../../convex/_generated/api";
 import { Doc } from "../../convex/_generated/dataModel";
 import { Button } from "./ui/button";
+import { usePathname } from "next/navigation";
+import DeleteAlert from "./deleteAlert";
+import Link from "next/link";
 
 interface FileCardProps {
   file: Doc<"files">;
@@ -55,13 +53,34 @@ interface FileCardProps {
   clerkId?: string | null;
 }
 
-const FileActions = ({ file, role, clerkId }: FileCardProps) => {
+interface FileActions {
+  file: Doc<"files">;
+  role?: string | null;
+  clerkId?: string | null;
+  table?: boolean;
+  orgId?: string | null;
+}
+
+export const FileActions = ({
+  file,
+  role,
+  clerkId,
+  table,
+  orgId,
+}: FileActions) => {
   const markfav = useMutation(api.files.markFavourite);
   const unfav = useMutation(api.files.unfavourite);
   const markdelete = useMutation(api.files.markForDeletion);
+  const pathname = usePathname();
+  const [isOpen, setisOpen] = useState<boolean>(false);
+  const getLink = useAction(api.files.getDownloadUrl);
+  const restore = useMutation(api.files.restorefile);
+
+  const isTrash = pathname.includes("trash");
 
   return (
     <>
+      <DeleteAlert files={[file]} isOpen={isOpen} setisOpen={setisOpen} />
       <DropdownMenu>
         <DropdownMenuTrigger>
           <MoreVerticalIcon />
@@ -102,17 +121,77 @@ const FileActions = ({ file, role, clerkId }: FileCardProps) => {
             <DropdownMenuItem
               className="  cursor-pointer"
               onClick={async () => {
-                const res = await markdelete({ fileId: file._id });
-                if (res) toast.success("File Marked for deletion");
-                else toast.error("Permission denied");
+                if (isTrash) {
+                  setisOpen(true);
+                } else {
+                  const res = await markdelete({ fileId: file._id });
+                  if (res) toast.success("File Marked for deletion");
+                  else toast.error("Permission denied");
+                }
               }}
             >
               <div className="text-red-500 flex items-center gap-x-2">
                 <Trash2Icon />
-                <p>Send to Trash</p>
+                <p>{isTrash ? "Delete" : "Send to Trash"}</p>
               </div>
             </DropdownMenuItem>
+           {isTrash && <DropdownMenuItem
+                className=" cursor-pointer flex items-center gap-x-2"
+                onClick={async () => {
+                  const res = await restore({
+                    fileId: file._id,
+                    orgId: orgId || "",
+                  });
+
+                  if (res) toast.success("File restored");
+                  else toast.error("Permission denied");
+                }}
+              >
+                <ArchiveRestoreIcon />
+                <p>Restore</p>
+              </DropdownMenuItem>}
           </Protect>
+          {table && !isTrash && (
+            <DropdownMenuItem
+              className=" flex items-center gap-x-2 cursor-pointer"
+              onClick={async () => {
+                const link = await getLink({
+                  orgId: orgId || "",
+                  storageId: file.storageId,
+                });
+                if (link) window.open(link, "_blank");
+              }}
+            >
+              <Download />
+              <p>Download</p>
+            </DropdownMenuItem>
+          )}
+
+          {/* {table && isTrash && (
+            <>
+              <DropdownMenuItem
+                className=" cursor-pointer flex items-center gap-x-2"
+                onClick={() => {
+                  setisOpen(true);
+                }}
+              >
+                <p className=" text-red-500">Delete</p>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className=" cursor-pointer flex items-center gap-x-2"
+                onClick={async () => {
+                  const res = await restore({
+                    fileId: file._id,
+                    orgId: orgId || "",
+                  });
+                  if (res) toast.success("File restored");
+                  else toast.error("Something went wrong");
+                }}
+              >
+                <p>Restore</p>
+              </DropdownMenuItem>
+            </>
+          )} */}
         </DropdownMenuContent>
       </DropdownMenu>
     </>
@@ -127,39 +206,15 @@ const FileCard: FC<FileCardProps> = ({
 }): ReactElement => {
   const getLink = useAction(api.files.getDownloadUrl);
 
-  const deletefile = useMutation(api.files.DeleteFiles);
   const restore = useMutation(api.files.restorefile);
   const [isOpen, setisOpen] = useState<boolean>(false);
-  const user = useQuery(api.users.getUserImage, {
+  const user = useQuery(api.users.getUser, {
     tokenIdentifier: file.authorTokenIdentifier,
   });
 
   return (
     <>
-      <AlertDialog open={isOpen} onOpenChange={(c) => setisOpen(c)}>
-        <AlertDialogContent>
-          <AlertDialogTitle hidden>Confirmation</AlertDialogTitle>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              file and remove your data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                const res = await deletefile({ files: [file] });
-                if (res) toast.success("File deleted successfully");
-                else toast.error("Something went wrong");
-              }}
-            >
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteAlert files={[file]} isOpen={isOpen} setisOpen={setisOpen} />
 
       <Card className="hover:shadow-lg ">
         <CardHeader>
@@ -171,15 +226,8 @@ const FileCard: FC<FileCardProps> = ({
               />
               <p>{file.name}</p>
             </div>
-            {!trash && (
-              <FileActions
-                file={file}
-                organization={organization}
-                role={role}
-                trash
-                clerkId={clerkId}
-              />
-            )}
+
+            {!trash && <FileActions file={file} role={role} clerkId={clerkId} />}
           </CardTitle>
         </CardHeader>
 
@@ -205,7 +253,12 @@ const FileCard: FC<FileCardProps> = ({
                 <span className=" space-y-1">
                   <p>{user.name}</p>
                   <p className=" text-xs">
-                    {new Date(file._creationTime).toLocaleString()}
+                    Uploaded {" "}
+                    {formatDistance(
+                      new Date(),
+                      new Date(file._creationTime),
+                      { includeSeconds: true,addSuffix: true }
+                    )}
                   </p>
                 </span>
               )}
