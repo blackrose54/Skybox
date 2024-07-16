@@ -27,7 +27,7 @@ function Sidebar({...restProps}) {
   const pathname = usePathname();
 
   return (
-    <div className=" w-56 p-8 pt-16 max-md:hidden">
+    <div className=" w-56 p-8 pt-16 ">
       <ul className=" text-xl font-semibold list-none space-y-8">
 
         {items.map(item=>{
