@@ -1,9 +1,9 @@
-import React from "react";
+import { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { cn } from "../lib/utils";
-import { LucideIcon, StarIcon } from "lucide-react";
-function SidebarOption({ pathname,title,Icon }: { pathname: string,title:string,Icon:LucideIcon }) {
+function SidebarOption({ pathname,title,Icon,...restProps }: { pathname: string,title:string,Icon:LucideIcon }) {
   return (
+
     <>
       <li className="group transition-all duration-300">
         <Link
@@ -11,6 +11,7 @@ function SidebarOption({ pathname,title,Icon }: { pathname: string,title:string,
           className={cn(" flex items-center gap-x-4 ", {
             "text-sky-500 font-bold": pathname.includes(title.replace(" ","").toLowerCase()),
           })}
+          {...restProps}
         >
           <Icon />
 

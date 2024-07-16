@@ -16,10 +16,9 @@ interface HeaderProps {}
 const Header: FC<HeaderProps> = async ({}) => {
   return (
     <header className="relative backdrop-blur-xl w-full bg-secondary h-20 px-2 md:px-8  py-4 flex items-center justify-between border-b-2 border-border z-50">
+      <div className=" flex items-center gap-x-4">
+        <MobileSidebar />
       <Link href={"/"} className=" flex items-center gap-x-4">
-        <div className=" md:hidden">
-          <MobileSidebar />
-        </div>
         <div className=" relative h-12 w-12 aspect-square">
           <Image
             src={"/logo.png"}
@@ -32,6 +31,8 @@ const Header: FC<HeaderProps> = async ({}) => {
           Skybox
         </p>
       </Link>
+      </div>
+
 
       <div>
         <SignedIn>

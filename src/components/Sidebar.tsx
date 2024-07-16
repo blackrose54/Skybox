@@ -1,8 +1,9 @@
 "use client";
 
-import { BookUser, FileIcon, Icon, StarIcon, TrashIcon } from "lucide-react";
+import { BookUser, FileIcon, StarIcon, TrashIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
-import SidebarOption from './SidebarOption'
+import SidebarOption from './SidebarOption';
+import { SheetClose } from "./ui/sheet";
 
 
 const items = [
@@ -22,17 +23,16 @@ const items = [
   }
 ]
 
-function Sidebar() {
+function Sidebar({...restProps}) {
   const pathname = usePathname();
 
   return (
-    <div className=" w-56 p-8 pt-16 max-md:hidden ">
+    <div className=" w-56 p-8 pt-16 max-md:hidden">
       <ul className=" text-xl font-semibold list-none space-y-8">
+
         {items.map(item=>{
-          return <SidebarOption key={item.title} Icon={item.Icon} title={item.title} pathname={pathname} />
+          return <SidebarOption {...restProps} key={item.title} Icon={item.Icon} title={item.title} pathname={pathname} />
         })}
-
-
       </ul>
     </div>
   );
