@@ -108,7 +108,7 @@ const Filebrowser = ({
         ) : query ? (
           <div className=" container col-span-full space-y-4 mt-8">
             <Image
-              src={"/emptyResult.svg"}
+              src={"/emptyresult.svg"}
               alt="logo"
               width={400}
               height={400}

@@ -166,32 +166,6 @@ export const FileActions = ({
               <p>Download</p>
             </DropdownMenuItem>
           )}
-
-          {/* {table && isTrash && (
-            <>
-              <DropdownMenuItem
-                className=" cursor-pointer flex items-center gap-x-2"
-                onClick={() => {
-                  setisOpen(true);
-                }}
-              >
-                <p className=" text-red-500">Delete</p>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className=" cursor-pointer flex items-center gap-x-2"
-                onClick={async () => {
-                  const res = await restore({
-                    fileId: file._id,
-                    orgId: orgId || "",
-                  });
-                  if (res) toast.success("File restored");
-                  else toast.error("Something went wrong");
-                }}
-              >
-                <p>Restore</p>
-              </DropdownMenuItem>
-            </>
-          )} */}
         </DropdownMenuContent>
       </DropdownMenu>
     </>
