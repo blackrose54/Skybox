@@ -51,9 +51,9 @@ const Filebrowser = ({
     fileTable = fileTable?.filter((f) => f.file.type === filetype);
 
   return (
-    <div className=" mx-auto container">
-      <Tabs defaultValue="grid" className="w-full space-y-6">
-        <div className=" flex w-full justify-between items-center">
+    <div className="  ">
+      <Tabs defaultValue="grid" className=" space-y-6">
+        <div className=" flex flex-wrap gap-y-4 justify-between items-center">
           <TabsList className="p-1">
             <TabsTrigger className=" flex gap-x-2 items-center " value="grid">
               <LayoutGrid /> <p>Grid</p>
@@ -106,7 +106,7 @@ const Filebrowser = ({
             </TabsContent>
           </>
         ) : query ? (
-          <div className=" container col-span-full space-y-4 mt-8">
+          <div className=" col-span-full space-y-4 mt-8">
             <Image
               src={"/emptyresult.svg"}
               alt="logo"

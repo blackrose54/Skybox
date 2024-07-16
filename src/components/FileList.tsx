@@ -11,21 +11,6 @@ interface props {
   clerkId?: string | null;
 }
 
-export const FileListLoading = () => {
-  return (
-    <div className=" grid grid-flow-row grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
-      <Skeleton className=" h-48 w-full rounded-md" />
-      <Skeleton className=" h-48 w-full rounded-md" />
-      <Skeleton className=" h-48 w-full rounded-md" />
-      <Skeleton className=" h-48 w-full rounded-md" />
-      <Skeleton className=" h-48 w-full rounded-md" />
-      <Skeleton className=" h-48 w-full rounded-md" />
-      <Skeleton className=" h-48 w-full rounded-md" />
-      <Skeleton className=" h-48 w-full rounded-md" />
-      <Skeleton className=" h-48 w-full rounded-md" />
-    </div>
-  );
-};
 
 const FileList = ({
   files,

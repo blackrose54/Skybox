@@ -149,7 +149,7 @@ const UploadButton: FC<UploadButtonProps> = ({}): ReactElement => {
       
           <Button className=" flex gap-x-2">
             <Upload size={18} />
-            <p className=" max-md:hidden">Upload File</p>
+            <p className="max-sm:visible max-md:hidden">Upload File</p>
           </Button>
         </DialogTrigger>
         <DialogContent>

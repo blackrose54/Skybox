@@ -44,7 +44,7 @@ function Search({ query ,route}: { query: string,route:string }) {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className=" space-y-8 md:w-[50%]"
+        className=" space-y-8 md:w-[50%] ms:w-[80%] w-full max-sm:order-last"
       >
         <FormField
           control={form.control}
@@ -56,7 +56,7 @@ function Search({ query ,route}: { query: string,route:string }) {
                   <Input placeholder="Search your files" {...field} />
                   <Button className=" space-x-2" type="submit">
                     <SearchIcon size={20} />
-                    <p>Search</p>
+                    <p className=" max-md:hidden">Search</p>
                   </Button>
                 </div>
               </FormControl>

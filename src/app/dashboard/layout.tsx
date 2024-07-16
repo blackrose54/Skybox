@@ -4,9 +4,9 @@ import React, { ReactNode } from "react";
 
 function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <div className=" flex">
+    <div className=" flex ">
       <Sidebar />
-      <div className="w-full space-y-8 m-8">
+      <div className="space-y-8 w-full p-4 ">
         <Searchbar />
         {children}
       </div>

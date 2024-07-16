@@ -6,7 +6,7 @@ interface FooterProps {}
 
 const Footer: FC<FooterProps> = ({}): ReactElement => {
   return (
-    <footer className="relative z-0 p-10 mt-12 text-center container flex justify-center  ">
+    <footer className="relative z-0 p-10 mt-12 text-center flex justify-center  ">
       <div className="  flex items-center gap-x-2 mx-auto">
         <h1>Made by</h1>
         <a

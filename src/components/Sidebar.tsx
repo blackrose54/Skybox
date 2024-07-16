@@ -26,12 +26,12 @@ function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className=" w-56 p-8 pt-16  ">
+    <div className=" w-56 p-8 pt-16 max-md:hidden ">
       <ul className=" text-xl font-semibold list-none space-y-8">
         {items.map(item=>{
           return <SidebarOption key={item.title} Icon={item.Icon} title={item.title} pathname={pathname} />
         })}
-       
+
 
       </ul>
     </div>

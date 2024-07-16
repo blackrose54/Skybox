@@ -11,12 +11,11 @@ import { MenuIcon } from "lucide-react";
 
 export default function MobileSidebar() {
   return (
-    <Sheet>
-      <SheetTrigger>
-        <MenuIcon />
-        
+    <Sheet  >
+      <SheetTrigger className=" md:hidden">
+        <MenuIcon />        
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent side={'left'} >
         <Sidebar />
       </SheetContent>
     </Sheet>
